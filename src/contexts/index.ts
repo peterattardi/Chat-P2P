@@ -1,6 +1,3 @@
-import {
-  PeerConnectionContext,
-  PeerConnectionProvider
-} from './connection_context/ConnectionContext'
+import { PeerConnectionContext, PeerConnectionProvider } from './connection/ConnectionContext'
 
 export { PeerConnectionContext, PeerConnectionProvider }
