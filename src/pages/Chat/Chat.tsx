@@ -20,14 +20,14 @@ const Chat = (): JSX.Element => {
         payload: {
           localStream: await navigator.mediaDevices.getUserMedia({
             video: true,
-            audio: false,
+            audio: false
           }),
           onActionCompeted: ({ localStream }) => {
             if (localWebcam.current != null && localStream != null) {
               localWebcam.current.srcObject = localStream
             }
-          },
-        },
+          }
+        }
       })
     } catch (err) {
       console.error(err)
@@ -66,7 +66,7 @@ const Chat = (): JSX.Element => {
         alignItems: 'center',
         justifyContent: 'center',
         gap: '5vh',
-        minHeight: '100vh',
+        minHeight: '100vh'
       }}
     >
       <h1>{connectionState.toUpperCase()}</h1>
@@ -75,7 +75,7 @@ const Chat = (): JSX.Element => {
         style={{
           display: 'flex',
           gap: '10px',
-          flexDirection: 'column',
+          flexDirection: 'column'
         }}
       >
         <button onClick={handleClickCreateOffer}>Create Offer</button>
@@ -87,7 +87,7 @@ const Chat = (): JSX.Element => {
           display: 'flex',
           alignItems: 'start',
           justifyItems: 'center',
-          gap: '100px',
+          gap: '100px'
         }}
       >
         <div
@@ -95,7 +95,7 @@ const Chat = (): JSX.Element => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '12px',
+            gap: '12px'
           }}
         >
           <video
@@ -107,7 +107,7 @@ const Chat = (): JSX.Element => {
               height: '200px',
               objectFit: 'cover',
               border: '1px solid black',
-              borderRadius: '0.5rem',
+              borderRadius: '0.5rem'
             }}
           />
           <button onClick={handleClickOpenWebcam} disabled={connectionState !== 'connected'}>
@@ -123,7 +123,7 @@ const Chat = (): JSX.Element => {
             height: '200px',
             objectFit: 'cover',
             border: '1px solid black',
-            borderRadius: '0.5rem',
+            borderRadius: '0.5rem'
           }}
         />
       </div>
@@ -132,7 +132,7 @@ const Chat = (): JSX.Element => {
         style={{
           display: 'flex',
           gap: '24px',
-          flexDirection: 'column',
+          flexDirection: 'column'
         }}
         onSubmit={handleClickAnswerOffer}
       >
