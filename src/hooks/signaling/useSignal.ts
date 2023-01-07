@@ -1,5 +1,5 @@
 import { addDoc, collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore'
-import { useContext, useState } from 'react'
+import { useContext } from 'react'
 import { firestore } from '../../../firebase'
 import { PeerConnectionContext } from '../../contexts'
 
@@ -12,7 +12,7 @@ interface UseSignalProps {
 const useSignal = (): UseSignalProps => {
   const {
     state: { pc, remoteStream, localStream },
-    dispatch,
+    dispatch
   } = useContext(PeerConnectionContext)
 
   const silence = (): MediaStreamTrack => {
@@ -21,14 +21,14 @@ const useSignal = (): UseSignalProps => {
     const dst = oscillator.connect(ctx.createMediaStreamDestination())
     oscillator.start()
     return Object.assign((dst as any).stream.getAudioTracks()[0], {
-      enabled: false,
+      enabled: false
     })
   }
 
   const black = ({ width = 640, height = 480 } = {}): MediaStreamTrack => {
     const canvas = Object.assign(document.createElement('canvas'), {
       width,
-      height,
+      height
     })
     const ctx = canvas.getContext('2d')
     if (ctx != null) ctx.fillRect(0, 0, width, height)
@@ -56,7 +56,7 @@ const useSignal = (): UseSignalProps => {
       await pc.setLocalDescription(offerDescription)
 
       await updateDoc(callDoc, {
-        offer: { sdp: offerDescription.sdp, type: offerDescription.type },
+        offer: { sdp: offerDescription.sdp, type: offerDescription.type }
       })
     }
 
@@ -115,7 +115,7 @@ const useSignal = (): UseSignalProps => {
       await pc.setLocalDescription(answer)
 
       await updateDoc(callDoc, {
-        answer: { type: answer.type, sdp: answer.sdp },
+        answer: { type: answer.type, sdp: answer.sdp }
       })
 
       onSnapshot(offerCandidatesCollection, (snapshot) => {

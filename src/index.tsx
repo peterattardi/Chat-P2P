@@ -16,5 +16,5 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         </Routes>
       </BrowserRouter>
     </PeerConnectionProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 )

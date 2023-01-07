@@ -6,14 +6,14 @@ import { useSignal } from '../../hooks'
 import Layout from '../Layout'
 
 const Room = (): JSX.Element => {
-  let { id } = useParams()
+  const { id } = useParams()
   const { state } = useLocation()
   const localWebcam = useRef<HTMLVideoElement>(null)
   const remoteWebcam = useRef<HTMLVideoElement>(null)
   const { setRemoteStream, answerOffer } = useSignal()
   const {
     state: { connectionState },
-    dispatch,
+    dispatch
   } = useContext(PeerConnectionContext)
 
   const openWebcam = async (): Promise<void> => {
@@ -23,14 +23,14 @@ const Room = (): JSX.Element => {
         payload: {
           localStream: await navigator.mediaDevices.getUserMedia({
             video: true,
-            audio: true,
+            audio: true
           }),
           onActionCompeted: ({ localStream }) => {
             if (localWebcam.current != null && localStream != null) {
               localWebcam.current.srcObject = localStream
             }
-          },
-        },
+          }
+        }
       })
     } catch (err) {
       console.error(err)
@@ -42,7 +42,7 @@ const Room = (): JSX.Element => {
   }
 
   useEffect(() => {
-    if (remoteWebcam.current) {
+    if (remoteWebcam.current != null) {
       setRemoteStream(remoteWebcam.current)
     }
 

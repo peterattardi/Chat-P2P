@@ -27,7 +27,7 @@ const Button = (props: ButtonProps): JSX.Element => {
   return (
     <button
       className={`${styleClassName} ${className ?? ''} ${sizeClassName} transition-all duration-200 w-min whitespace-nowrap ${
-        htmlProps.disabled ? 'pointer-events-none opacity-40' : ''
+        htmlProps.disabled === true ? 'pointer-events-none opacity-40' : ''
       }`}
       {...htmlProps}
     />

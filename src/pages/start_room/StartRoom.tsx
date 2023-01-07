@@ -1,11 +1,10 @@
-import { BaseSyntheticEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Input } from '../../components'
+import { Button } from '../../components'
 import { useSignal } from '../../hooks'
 import Layout from '../Layout'
 
 const StartRoom = (): JSX.Element => {
-  const { createOffer, answerOffer } = useSignal()
+  const { createOffer } = useSignal()
   const navigate = useNavigate()
 
   const handleCreateRoom = (): void => {
