@@ -4,16 +4,16 @@ import { firestore } from '../../../firebase'
 import { PeerConnectionContext } from '../../contexts'
 
 interface UseSignalProps {
-  connectionState: RTCPeerConnectionState
-  createOffer: (remoteWebcam: HTMLVideoElement) => Promise<string>
-  answerOffer: (callDocId: string, remoteWebcam: HTMLVideoElement) => Promise<void>
+  createOffer: () => Promise<string>
+  answerOffer: (callDocId: string) => Promise<void>
+  setRemoteStream: (remoteWebcam: HTMLVideoElement) => void
 }
 
 const useSignal = (): UseSignalProps => {
   const {
-    state: { pc, remoteStream, localStream }
+    state: { pc, remoteStream, localStream },
+    dispatch,
   } = useContext(PeerConnectionContext)
-  const [connectionState, setConnectionState] = useState<RTCPeerConnectionState>(pc.connectionState)
 
   const silence = (): MediaStreamTrack => {
     const ctx = new AudioContext()
@@ -21,14 +21,14 @@ const useSignal = (): UseSignalProps => {
     const dst = oscillator.connect(ctx.createMediaStreamDestination())
     oscillator.start()
     return Object.assign((dst as any).stream.getAudioTracks()[0], {
-      enabled: false
+      enabled: false,
     })
   }
 
   const black = ({ width = 640, height = 480 } = {}): MediaStreamTrack => {
     const canvas = Object.assign(document.createElement('canvas'), {
       width,
-      height
+      height,
     })
     const ctx = canvas.getContext('2d')
     if (ctx != null) ctx.fillRect(0, 0, width, height)
@@ -36,13 +36,15 @@ const useSignal = (): UseSignalProps => {
     return Object.assign(stream.getVideoTracks()[0], { enabled: false })
   }
 
-  const createOffer = async (remoteWebcam: HTMLVideoElement): Promise<string> => {
+  const setRemoteStream = (remoteWebcam: HTMLVideoElement): void => {
+    remoteWebcam.srcObject = remoteStream
+  }
+
+  const createOffer = async (): Promise<string> => {
     const { id: callDocId } = await addDoc(collection(firestore, 'calls'), {})
     const callDoc = doc(firestore, 'calls', callDocId)
     const offerCandidatesCollection = collection(firestore, 'calls', callDocId, 'offerCandidates')
     const answerCandidatesCollection = collection(firestore, 'calls', callDocId, 'answerCandidates')
-
-    remoteWebcam.srcObject = remoteStream
 
     const blackSilence = new MediaStream([black(), silence()])
     blackSilence.getTracks().forEach((track) => {
@@ -54,12 +56,13 @@ const useSignal = (): UseSignalProps => {
       await pc.setLocalDescription(offerDescription)
 
       await updateDoc(callDoc, {
-        offer: { sdp: offerDescription.sdp, type: offerDescription.type }
+        offer: { sdp: offerDescription.sdp, type: offerDescription.type },
       })
     }
 
     pc.onconnectionstatechange = () => {
-      setConnectionState(pc.connectionState)
+      console.log(pc.connectionState)
+      dispatch({ type: 'SET_CONNECTIONSTATE', payload: { connectionState: pc.connectionState } })
     }
 
     pc.ontrack = (event) => {
@@ -76,7 +79,7 @@ const useSignal = (): UseSignalProps => {
 
     onSnapshot(callDoc, (snapshot) => {
       const { answer } = snapshot.data() as any
-      if (answer !== undefined && answer !== pc.remoteDescription) {
+      if (answer !== undefined && pc.remoteDescription == null) {
         const answerDescription = new RTCSessionDescription(answer)
         pc.setRemoteDescription(answerDescription).catch((err) => console.error(err))
       }
@@ -94,9 +97,7 @@ const useSignal = (): UseSignalProps => {
     return callDocId
   }
 
-  const answerOffer = async (callDocId: string, remoteWebcam: HTMLVideoElement): Promise<void> => {
-    remoteWebcam.srcObject = remoteStream
-
+  const answerOffer = async (callDocId: string): Promise<void> => {
     const blackSilence = new MediaStream([black(), silence()])
     blackSilence.getTracks().forEach((track) => {
       pc.addTrack(track, localStream)
@@ -114,7 +115,7 @@ const useSignal = (): UseSignalProps => {
       await pc.setLocalDescription(answer)
 
       await updateDoc(callDoc, {
-        answer: { type: answer.type, sdp: answer.sdp }
+        answer: { type: answer.type, sdp: answer.sdp },
       })
 
       onSnapshot(offerCandidatesCollection, (snapshot) => {
@@ -128,7 +129,7 @@ const useSignal = (): UseSignalProps => {
     }
 
     pc.onconnectionstatechange = () => {
-      setConnectionState(pc.connectionState)
+      dispatch({ type: 'SET_CONNECTIONSTATE', payload: { connectionState: pc.connectionState } })
     }
 
     pc.ontrack = (event) => {
@@ -143,7 +144,7 @@ const useSignal = (): UseSignalProps => {
     }
   }
 
-  return { createOffer, answerOffer, connectionState }
+  return { createOffer, answerOffer, setRemoteStream }
 }
 
 export default useSignal

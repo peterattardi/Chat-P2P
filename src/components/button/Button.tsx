@@ -24,7 +24,14 @@ const Button = (props: ButtonProps): JSX.Element => {
     return !small ? 'h-[48px] px-[32px] text-[16px]' : 'h-[32px] px-[12px] text-[14px]'
   })()
 
-  return <button className={`${styleClassName} ${className ?? ''} ${sizeClassName} transition-all duration-200`} {...htmlProps} />
+  return (
+    <button
+      className={`${styleClassName} ${className ?? ''} ${sizeClassName} transition-all duration-200 w-min whitespace-nowrap ${
+        htmlProps.disabled ? 'pointer-events-none opacity-40' : ''
+      }`}
+      {...htmlProps}
+    />
+  )
 }
 
 export default Button

@@ -1,4 +1,4 @@
-import Chat from './Chat/Chat'
-import StartRoom from './startRoom/StartRoom'
+import StartRoom from './start_room/StartRoom'
+import Room from './room/Room'
 
-export { Chat, StartRoom }
+export { StartRoom, Room }
