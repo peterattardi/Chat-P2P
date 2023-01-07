@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [react()],
   base: '/Chat-P2P/',
   server: {
-    port: 3000,
+    port: 3000
   },
   optimizeDeps: {
-    exclude: ['firebase', 'firebase/app', 'firebase/firestore'],
-  },
+    exclude: ['firebase', 'firebase/app', 'firebase/firestore']
+  }
 })

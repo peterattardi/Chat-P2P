@@ -4,25 +4,17 @@ import {
   doc,
   getDoc,
   onSnapshot,
-  updateDoc,
+  updateDoc
 } from 'firebase/firestore'
 import { firestore } from '../../../firebase'
-import { BaseSyntheticEvent, useRef, useState } from 'react'
-
-const SERVERS = {
-  iceServers: [
-    {
-      urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
-    },
-  ],
-  iceCandidatePoolSize: 10,
-}
-
-const pc = new RTCPeerConnection(SERVERS)
-let localStream: MediaStream = new MediaStream()
-const remoteStream: MediaStream = new MediaStream()
+import { BaseSyntheticEvent, useContext, useRef, useState } from 'react'
+import { PeerConnectionContext } from '../../contexts/ConnectionContext'
 
 const Chat = (): JSX.Element => {
+  const {
+    state: { pc, localStream, remoteStream },
+    dispatch
+  } = useContext(PeerConnectionContext)
   const [status, setStatus] = useState('Not connected')
   const [role, setRole] = useState<string>()
   const localWebcam = useRef<HTMLVideoElement>(null)
@@ -34,14 +26,14 @@ const Chat = (): JSX.Element => {
     const dst = oscillator.connect(ctx.createMediaStreamDestination())
     oscillator.start()
     return Object.assign((dst as any).stream.getAudioTracks()[0], {
-      enabled: false,
+      enabled: false
     })
   }
 
   const black = ({ width = 640, height = 480 } = {}): MediaStreamTrack => {
     const canvas = Object.assign(document.createElement('canvas'), {
       width,
-      height,
+      height
     })
     const ctx = canvas.getContext('2d')
     if (ctx != null) ctx.fillRect(0, 0, width, height)
@@ -49,26 +41,27 @@ const Chat = (): JSX.Element => {
     return Object.assign(stream.getVideoTracks()[0], { enabled: false })
   }
 
+  /**
+   * Replaces the pc tracks with the new ones from the user's webcam
+   *
+   * After all is completed, the localWecam ref will point to the new stream
+   */
   const openWebcam = async (): Promise<void> => {
     try {
-      localStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: false,
+      dispatch({
+        type: 'SET_LOCALSTREAM',
+        payload: {
+          localStream: await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false
+          }),
+          onActionCompeted: ({ localStream }) => {
+            if (localWebcam.current != null && localStream != null) {
+              localWebcam.current.srcObject = localStream
+            }
+          }
+        }
       })
-
-      if (localWebcam.current != null) {
-        localWebcam.current.srcObject = localStream
-      }
-
-      await Promise.all(
-        pc.getSenders().map(async (sender) => {
-          await sender.replaceTrack(
-            localStream
-              .getTracks()
-              .find((t) => t.kind === sender.track?.kind) ?? null,
-          )
-        }),
-      )
     } catch (err) {
       console.error(err)
     }
@@ -81,13 +74,13 @@ const Chat = (): JSX.Element => {
       firestore,
       'calls',
       callDocId,
-      'offerCandidates',
+      'offerCandidates'
     )
     const answerCandidatesCollection = collection(
       firestore,
       'calls',
       callDocId,
-      'answerCandidates',
+      'answerCandidates'
     )
 
     if (remoteWebcam.current != null) {
@@ -104,7 +97,7 @@ const Chat = (): JSX.Element => {
       await pc.setLocalDescription(offerDescription)
 
       await updateDoc(callDoc, {
-        offer: { sdp: offerDescription.sdp, type: offerDescription.type },
+        offer: { sdp: offerDescription.sdp, type: offerDescription.type }
       })
     }
 
@@ -121,7 +114,7 @@ const Chat = (): JSX.Element => {
     pc.onicecandidate = (event) => {
       if (event.candidate != null) {
         addDoc(offerCandidatesCollection, event.candidate.toJSON()).catch(
-          (err) => console.error(err),
+          (err) => console.error(err)
         )
       }
     }
@@ -131,7 +124,7 @@ const Chat = (): JSX.Element => {
       if (answer !== undefined && answer !== pc.remoteDescription) {
         const answerDescription = new RTCSessionDescription(answer)
         pc.setRemoteDescription(answerDescription).catch((err) =>
-          console.error(err),
+          console.error(err)
         )
       }
     })
@@ -147,7 +140,7 @@ const Chat = (): JSX.Element => {
 
     setRole('offerer')
     const inputBox = document.getElementById(
-      'call-id-input',
+      'call-id-input'
     ) as HTMLInputElement | null
     if (inputBox != null) {
       inputBox.value = callDocId
@@ -170,13 +163,13 @@ const Chat = (): JSX.Element => {
       firestore,
       'calls',
       callDocId,
-      'offerCandidates',
+      'offerCandidates'
     )
     const answerCandidatesCollection = collection(
       firestore,
       'calls',
       callDocId,
-      'answerCandidates',
+      'answerCandidates'
     )
 
     pc.onnegotiationneeded = async () => {
@@ -186,7 +179,7 @@ const Chat = (): JSX.Element => {
       await pc.setLocalDescription(answer)
 
       await updateDoc(callDoc, {
-        answer: { type: answer.type, sdp: answer.sdp },
+        answer: { type: answer.type, sdp: answer.sdp }
       })
 
       onSnapshot(offerCandidatesCollection, (snapshot) => {
@@ -194,7 +187,7 @@ const Chat = (): JSX.Element => {
           if (change.type === 'added') {
             const data = change.doc.data()
             pc.addIceCandidate(new RTCIceCandidate(data)).catch((err) =>
-              console.error(err),
+              console.error(err)
             )
           }
         })
@@ -213,7 +206,7 @@ const Chat = (): JSX.Element => {
     pc.onicecandidate = (event) => {
       if (event.candidate !== null) {
         addDoc(answerCandidatesCollection, event.candidate.toJSON()).catch(
-          (err) => console.error(err),
+          (err) => console.error(err)
         )
       }
     }
@@ -222,7 +215,7 @@ const Chat = (): JSX.Element => {
   }
 
   const handleClickCreateOffer: React.MouseEventHandler<
-    HTMLButtonElement
+  HTMLButtonElement
   > = () => {
     createOffer().catch((err) => console.error(err))
   }
@@ -246,7 +239,7 @@ const Chat = (): JSX.Element => {
         alignItems: 'center',
         justifyContent: 'center',
         gap: '5vh',
-        minHeight: '100vh',
+        minHeight: '100vh'
       }}
     >
       <h1>{status.toUpperCase()}</h1>
@@ -256,7 +249,7 @@ const Chat = (): JSX.Element => {
           style={{
             display: 'flex',
             gap: '10px',
-            flexDirection: 'column',
+            flexDirection: 'column'
           }}
         >
           <button onClick={handleClickCreateOffer}>Create Offer</button>
@@ -269,7 +262,7 @@ const Chat = (): JSX.Element => {
           display: 'flex',
           alignItems: 'start',
           justifyItems: 'center',
-          gap: '100px',
+          gap: '100px'
         }}
       >
         <div
@@ -277,7 +270,7 @@ const Chat = (): JSX.Element => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '12px',
+            gap: '12px'
           }}
         >
           <video
@@ -289,7 +282,7 @@ const Chat = (): JSX.Element => {
               height: '200px',
               objectFit: 'cover',
               border: '1px solid black',
-              borderRadius: '0.5rem',
+              borderRadius: '0.5rem'
             }}
           />
           <button
@@ -308,7 +301,7 @@ const Chat = (): JSX.Element => {
             height: '200px',
             objectFit: 'cover',
             border: '1px solid black',
-            borderRadius: '0.5rem',
+            borderRadius: '0.5rem'
           }}
         />
       </div>
@@ -318,7 +311,7 @@ const Chat = (): JSX.Element => {
           style={{
             display: 'flex',
             gap: '24px',
-            flexDirection: 'column',
+            flexDirection: 'column'
           }}
           onSubmit={handleClickAnswerOffer}
         >
