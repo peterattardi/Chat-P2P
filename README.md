@@ -6,7 +6,7 @@ Firebase is used as signaling server.
 
 ## Demo
 
-Play with the [demo](https://chatapp-ec7e1.web.app/).
+Play the [demo](https://chatapp-ec7e1.web.app/).
 
 ## Setup
 
