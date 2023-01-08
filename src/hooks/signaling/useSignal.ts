@@ -6,7 +6,7 @@ import { PeerConnectionContext } from '../../contexts'
 interface UseSignalProps {
   createOffer: () => Promise<string>
   answerOffer: (callDocId: string) => Promise<void>
-  setRemoteStream: (remoteWebcam: HTMLVideoElement) => void
+  setRemoteStream: (remoteWebcam: HTMLVideoElement | null) => void
   closeConnection: () => void
   send: (message: any) => void
 }
@@ -46,8 +46,8 @@ const useSignal = ({ onMessageReceived }: UseSignalOptions): UseSignalProps => {
     return Object.assign(stream.getVideoTracks()[0], { enabled: false })
   }
 
-  const setRemoteStream = (remoteWebcam: HTMLVideoElement): void => {
-    remoteWebcam.srcObject = remoteStream
+  const setRemoteStream = (remoteWebcam: HTMLVideoElement | null): void => {
+    if (remoteWebcam != null) remoteWebcam.srcObject = remoteStream
   }
 
   const createOffer = async (): Promise<string> => {

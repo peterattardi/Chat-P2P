@@ -55,6 +55,7 @@ const Room = (): JSX.Element => {
 
   const hangup = (): void => {
     closeConnection()
+    setRemoteStream(null)
   }
 
   if (remoteWebcam.current != null) {
@@ -65,16 +66,38 @@ const Room = (): JSX.Element => {
     console.log('message', message)
   }
 
+  const title: string = (() => {
+    switch (connectionState) {
+      case 'new':
+        return 'Share the link with the another peer!'
+      case 'connecting':
+        return 'Connecting...'
+      case 'connected':
+        return 'Peer joined! Say hello'
+      case 'disconnected':
+        return 'Peer disconnected :/'
+      case 'closed':
+        return 'Good bye :)'
+
+      default:
+        console.log(connectionState)
+        return ''
+    }
+  })()
+
   return (
     <Layout>
-      <section className='w-full flex flex-col justify-center items-center space-y-[64px]'>
+      <section className='w-full min-h-screen flex flex-col justify-center items-center space-y-[32px]'>
         {!joinedClick
           ? (
-            <Button onClick={start}>Join</Button>
+            <section className='space-y-[32px] flex flex-col justify-center items-center'>
+              <h1>Someone has invited you to join their room!</h1>
+              <Button onClick={start}>Join</Button>
+            </section>
             )
           : (
             <>
-              <h1 className='text-[3vh]'>{connectionState !== 'connected' ? `${connectionState.toUpperCase()}` : 'Peer joined!'}</h1>
+              <h1>{title}</h1>
               <section className='w-full grid md:grid-cols-2 md:grid-rows-1 grid-rows-2 grid-cols-1 gap-[64px]'>
                 <div className='flex md:flex-col flex-col-reverse space-y-[12px] flex-r'>
                   <Video ref={localWebcam} />

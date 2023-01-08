@@ -6,14 +6,7 @@ const Video = React.forwardRef((props: VideoProps, ref: React.ForwardedRef<HTMLV
   const { className, ...htmlProps } = props
 
   return (
-    <video
-      className={`${className ?? ''} object-cover rounded-md border-[2px] border-black w-full aspect-square`}
-      ref={ref}
-      {...htmlProps}
-      playsInline
-      autoPlay
-      controls={false}
-    />
+    <video className={`${className ?? ''} object-cover rounded-md border-[2px] border-black w-[50vw] h-[50vh]`} ref={ref} {...htmlProps} playsInline autoPlay controls={false} />
   )
 })
 

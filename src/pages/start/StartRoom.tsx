@@ -13,21 +13,12 @@ const StartRoom = (): JSX.Element => {
       .catch((err) => console.error(err))
   }
 
-  // const handleAnswerOffer = (event: BaseSyntheticEvent): void => {
-  //   event.preventDefault()
-  //   const id = event.target[0].value as string
-
-  //   answerOffer(id)
-  //     .then(() => navigate(`/${id}`))
-  //     .catch((err) => console.error(err))
-  // }
-
   return (
     <Layout>
-      <section className='w-full flex flex-col justify-center items-center space-y-[64px] min-h-[calc(100vh-240px)]'>
-        <h1 className='text-[3vh] font-bold'>Welcome to Chat P2P</h1>
-        <section className='flex flex-col justify-center items-center space-y-[100px] pt-[60px]'>
-          <p className='tracking-wide text-center'>
+      <section className='w-full flex flex-col justify-center items-center space-y-[32px] min-h-screen'>
+        <h1 className='font-bold'>Welcome to Chat P2P</h1>
+        <section className='flex flex-col justify-center items-center space-y-[100px] pt-[30px]'>
+          <p className='text-center'>
             Click the botton below to create a new room 📺
             <br />
             <br />
@@ -37,7 +28,7 @@ const StartRoom = (): JSX.Element => {
             Create room
           </Button>
 
-          <p className='tracking-wide text-center'>Once you are both joined, open the webcam and start chatting!</p>
+          <p className='text-center'>Once you are both joined, open the webcam and start chatting!</p>
           {/* <form className='flex justify-center space-x-[32px] items-end' onSubmit={handleAnswerOffer}>
             <Input placeholder='Room id' label='Room ID' />
             <Button buttonType='secondary'>Join</Button>
