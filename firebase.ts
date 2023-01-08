@@ -1,6 +1,10 @@
 import { initializeApp } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
 
+
+// You can do anything you want with these
+// Firebase rules are set protect the app
+
 const firebaseConfig = {
   apiKey: 'AIzaSyBHRmSN6BkP5qj6KG279_z8QUT809aTntM',
   authDomain: 'chatapp-ec7e1.firebaseapp.com',
