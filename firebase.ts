@@ -3,7 +3,7 @@ import { getFirestore } from 'firebase/firestore'
 
 
 // You can do anything you want with these
-// Firebase rules are set protect the app
+// Firebase rules are set to protect the app
 
 const firebaseConfig = {
   apiKey: 'AIzaSyBHRmSN6BkP5qj6KG279_z8QUT809aTntM',
