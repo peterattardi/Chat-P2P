@@ -5,9 +5,9 @@ import react from '@vitejs/plugin-react-swc'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000,
+    port: 3000
   },
   optimizeDeps: {
-    exclude: ['firebase', 'firebase/app', 'firebase/firestore'],
-  },
+    exclude: ['firebase', 'firebase/app', 'firebase/firestore']
+  }
 })

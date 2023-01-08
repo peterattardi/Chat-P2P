@@ -6,10 +6,10 @@ import { createContext, Dispatch, PropsWithChildren, useReducer } from 'react'
 const SERVERS = {
   iceServers: [
     {
-      urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
-    },
+      urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302']
+    }
   ],
-  iceCandidatePoolSize: 10,
+  iceCandidatePoolSize: 10
 }
 
 /**
@@ -34,9 +34,9 @@ interface ConnectionContextProps {
 interface ConnectionContextAction {
   type: `SET_${Uppercase<keyof ConnectionContextProps>}`
   payload: Partial<
-    ConnectionContextProps & {
-      onActionCompeted: (newState: Partial<ConnectionContextProps>) => void
-    }
+  ConnectionContextProps & {
+    onActionCompeted: (newState: Partial<ConnectionContextProps>) => void
+  }
   >
 }
 
@@ -48,12 +48,12 @@ const initialValues: ConnectionContextProps = {
   localStream: new MediaStream(),
   remoteStream: new MediaStream(),
   connectionState: 'new',
-  dataChannel: null,
+  dataChannel: null
 }
 
 export const PeerConnectionContext = createContext({
   state: initialValues,
-  dispatch: (() => null) as Dispatch<ConnectionContextAction>,
+  dispatch: (() => null) as Dispatch<ConnectionContextAction>
 })
 
 /**
@@ -67,7 +67,7 @@ const replaceTracks = async (pc: RTCPeerConnection, stream: MediaStream): Promis
   await Promise.all(
     pc.getSenders().map(async (sender) => {
       await sender.replaceTrack(stream.getTracks().find((t) => t.kind === sender.track?.kind) ?? null)
-    }),
+    })
   )
 }
 
@@ -114,7 +114,7 @@ const reducer = (state: ConnectionContextProps, action: ConnectionContextAction)
         console.warn('Falsy payload passed to reducer')
         return state
       }
-      return { ...state, dataChannel: dataChannel }
+      return { ...state, dataChannel }
     }
     default:
       console.warn('Tried to dispatch an invalid action')

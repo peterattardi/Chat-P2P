@@ -18,7 +18,7 @@ interface UseSignalOptions {
 const useSignal = ({ onMessageReceived }: UseSignalOptions): UseSignalProps => {
   const {
     state: { pc, remoteStream, localStream, dataChannel },
-    dispatch,
+    dispatch
   } = useContext(PeerConnectionContext)
 
   const silence = (): MediaStreamTrack => {
@@ -27,14 +27,14 @@ const useSignal = ({ onMessageReceived }: UseSignalOptions): UseSignalProps => {
     const dst = oscillator.connect(ctx.createMediaStreamDestination())
     oscillator.start()
     return Object.assign((dst as any).stream.getAudioTracks()[0], {
-      enabled: false,
+      enabled: false
     })
   }
 
   const white = ({ width = 640, height = 480 } = {}): MediaStreamTrack => {
     const canvas = Object.assign(document.createElement('canvas'), {
       width,
-      height,
+      height
     })
     const ctx = canvas.getContext('2d')
 
@@ -66,7 +66,7 @@ const useSignal = ({ onMessageReceived }: UseSignalOptions): UseSignalProps => {
       await pc.setLocalDescription(offerDescription)
 
       await updateDoc(callDoc, {
-        offer: { sdp: offerDescription.sdp, type: offerDescription.type },
+        offer: { sdp: offerDescription.sdp, type: offerDescription.type }
       })
     }
 
@@ -144,7 +144,7 @@ const useSignal = ({ onMessageReceived }: UseSignalOptions): UseSignalProps => {
       await pc.setLocalDescription(answer)
 
       await updateDoc(callDoc, {
-        answer: { type: answer.type, sdp: answer.sdp },
+        answer: { type: answer.type, sdp: answer.sdp }
       })
 
       if (count === 0) {
