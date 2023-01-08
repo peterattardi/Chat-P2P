@@ -4,7 +4,7 @@ import { useSignal } from '../../hooks'
 import Layout from '../Layout'
 
 const StartRoom = (): JSX.Element => {
-  const { createOffer } = useSignal()
+  const { createOffer } = useSignal({ onMessageReceived: () => {} })
   const navigate = useNavigate()
 
   const handleCreateRoom = (): void => {

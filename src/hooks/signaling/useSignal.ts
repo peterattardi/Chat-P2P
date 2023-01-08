@@ -7,12 +7,18 @@ interface UseSignalProps {
   createOffer: () => Promise<string>
   answerOffer: (callDocId: string) => Promise<void>
   setRemoteStream: (remoteWebcam: HTMLVideoElement) => void
+  closeConnection: () => void
+  send: (message: any) => void
 }
 
-const useSignal = (): UseSignalProps => {
+interface UseSignalOptions {
+  onMessageReceived: (message: any) => void
+}
+
+const useSignal = ({ onMessageReceived }: UseSignalOptions): UseSignalProps => {
   const {
-    state: { pc, remoteStream, localStream },
-    dispatch
+    state: { pc, remoteStream, localStream, dataChannel },
+    dispatch,
   } = useContext(PeerConnectionContext)
 
   const silence = (): MediaStreamTrack => {
@@ -21,17 +27,21 @@ const useSignal = (): UseSignalProps => {
     const dst = oscillator.connect(ctx.createMediaStreamDestination())
     oscillator.start()
     return Object.assign((dst as any).stream.getAudioTracks()[0], {
-      enabled: false
+      enabled: false,
     })
   }
 
-  const black = ({ width = 640, height = 480 } = {}): MediaStreamTrack => {
+  const white = ({ width = 640, height = 480 } = {}): MediaStreamTrack => {
     const canvas = Object.assign(document.createElement('canvas'), {
       width,
-      height
+      height,
     })
     const ctx = canvas.getContext('2d')
-    if (ctx != null) ctx.fillRect(0, 0, width, height)
+
+    if (ctx != null) {
+      ctx.fillStyle = 'rgba(255,255,255,1)'
+      ctx.fillRect(0, 0, width, height)
+    }
     const stream = canvas.captureStream()
     return Object.assign(stream.getVideoTracks()[0], { enabled: false })
   }
@@ -46,8 +56,8 @@ const useSignal = (): UseSignalProps => {
     const offerCandidatesCollection = collection(firestore, 'calls', callDocId, 'offerCandidates')
     const answerCandidatesCollection = collection(firestore, 'calls', callDocId, 'answerCandidates')
 
-    const blackSilence = new MediaStream([black(), silence()])
-    blackSilence.getTracks().forEach((track) => {
+    const whiteAndSilence = new MediaStream([white(), silence()])
+    whiteAndSilence.getTracks().forEach((track) => {
       pc.addTrack(track, localStream)
     })
 
@@ -56,12 +66,12 @@ const useSignal = (): UseSignalProps => {
       await pc.setLocalDescription(offerDescription)
 
       await updateDoc(callDoc, {
-        offer: { sdp: offerDescription.sdp, type: offerDescription.type }
+        offer: { sdp: offerDescription.sdp, type: offerDescription.type },
       })
     }
 
     pc.onconnectionstatechange = () => {
-      console.log(pc.connectionState)
+      console.info(pc.connectionState)
       dispatch({ type: 'SET_CONNECTIONSTATE', payload: { connectionState: pc.connectionState } })
     }
 
@@ -94,11 +104,22 @@ const useSignal = (): UseSignalProps => {
       })
     })
 
+    const dataChannel = pc.createDataChannel('channel')
+
+    dataChannel.onopen = () => {
+      console.info('Data channel opened!')
+      dispatch({ type: 'SET_DATACHANNEL', payload: { dataChannel } })
+    }
+
+    dataChannel.onmessage = ({ data }) => {
+      onMessageReceived(JSON.parse(data))
+    }
+
     return callDocId
   }
 
   const answerOffer = async (callDocId: string): Promise<void> => {
-    const blackSilence = new MediaStream([black(), silence()])
+    const blackSilence = new MediaStream([white(), silence()])
     blackSilence.getTracks().forEach((track) => {
       pc.addTrack(track, localStream)
     })
@@ -108,27 +129,40 @@ const useSignal = (): UseSignalProps => {
     const offerCandidatesCollection = collection(firestore, 'calls', callDocId, 'offerCandidates')
     const answerCandidatesCollection = collection(firestore, 'calls', callDocId, 'answerCandidates')
 
+    let count = 0
+
     pc.onnegotiationneeded = async () => {
+      console.count('here')
+      if (count > 3) {
+        return
+      }
+
       const { offer } = (await getDoc(callDoc)).data() as any
       await pc.setRemoteDescription(new RTCSessionDescription(offer))
+
       const answer = await pc.createAnswer()
       await pc.setLocalDescription(answer)
 
       await updateDoc(callDoc, {
-        answer: { type: answer.type, sdp: answer.sdp }
+        answer: { type: answer.type, sdp: answer.sdp },
       })
 
-      onSnapshot(offerCandidatesCollection, (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === 'added') {
-            const data = change.doc.data()
-            pc.addIceCandidate(new RTCIceCandidate(data)).catch((err) => console.error(err))
-          }
+      if (count === 0) {
+        onSnapshot(offerCandidatesCollection, (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'added') {
+              const data = change.doc.data()
+              pc.addIceCandidate(new RTCIceCandidate(data)).catch((err) => console.error(err))
+            }
+          })
         })
-      })
+      }
+
+      count += 1
     }
 
     pc.onconnectionstatechange = () => {
+      console.info(pc.connectionState)
       dispatch({ type: 'SET_CONNECTIONSTATE', payload: { connectionState: pc.connectionState } })
     }
 
@@ -142,9 +176,29 @@ const useSignal = (): UseSignalProps => {
         addDoc(answerCandidatesCollection, event.candidate.toJSON()).catch((err) => console.error(err))
       }
     }
+
+    pc.ondatachannel = ({ channel }) => {
+      console.info('Data channel received!')
+      dispatch({ type: 'SET_DATACHANNEL', payload: { dataChannel: channel } })
+
+      channel.onmessage = ({ data }) => {
+        onMessageReceived(JSON.parse(data))
+      }
+    }
   }
 
-  return { createOffer, answerOffer, setRemoteStream }
+  const closeConnection = (): void => {
+    pc.close()
+    dispatch({ type: 'SET_CONNECTIONSTATE', payload: { connectionState: pc.connectionState } })
+  }
+
+  const send = (message: any): void => {
+    if (dataChannel != null) {
+      dataChannel.send(JSON.stringify(message))
+    }
+  }
+
+  return { createOffer, answerOffer, setRemoteStream, closeConnection, send }
 }
 
 export default useSignal
