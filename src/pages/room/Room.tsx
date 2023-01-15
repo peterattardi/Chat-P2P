@@ -69,7 +69,7 @@ const Room = (): JSX.Element => {
   const title: string = (() => {
     switch (connectionState) {
       case 'new':
-        return 'Share the link with the another peer!'
+        return 'Share the url link with another peer!'
       case 'connecting':
         return 'Connecting...'
       case 'connected':
